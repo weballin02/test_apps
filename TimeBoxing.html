@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Responsive Timebox Planner</title>
+  <style>
+    /* Reset */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Page Styling */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "San Francisco", Helvetica, Arial, sans-serif;
+      background-color: #f5f5f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      grid-gap: 20px;
+      background: #fff;
+      padding: 20px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      max-width: 90vw;
+      width: 600px;
+    }
+
+    /* Left Section - Priorities and Notes */
+    .left-section {
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .left-section h2 {
+      font-size: 1.2rem;
+      margin-bottom: 5px; /* Minimal space between headers and content */
+      color: #333;
+    }
+
+    .priorities {
+      margin-bottom: 5px; /* Reduced space between Priorities and Notes */
+    }
+
+    .priority-item {
+      display: flex;
+      align-items: center;
+      background: #f1f3f5; /* Light gray background */
+      padding: 6px 10px;
+      border-radius: 12px; /* Rounded corners */
+      border: 1px solid #ddd;
+      font-size: 0.9rem;
+      height: 36px; /* Fixed height for compact look */
+      margin-bottom: 5px; /* Small margin between items */
+    }
+
+    .priority-item:last-child {
+      margin-bottom: 0; /* Remove margin on last item */
+    }
+
+    .priority-item input[type="checkbox"] {
+      margin-right: 8px;
+      transform: scale(1.1); /* Slightly larger checkbox */
+    }
+
+    .priority-item input[type="text"] {
+      flex: 1;
+      font-size: 0.9rem;
+      background: none;
+      border: none;
+      outline: none;
+      color: #333;
+      padding: 0;
+      height: 100%; /* Full height for alignment */
+    }
+
+    .priority-item.done input[type="text"] {
+      text-decoration: line-through;
+      color: #999;
+    }
+
+    /* Notes Section */
+    .notes-label {
+      font-size: 1.2rem;
+      color: #333;
+      margin-top: 5px; /* Adjusted to move closer to the third priority box */
+      margin-bottom: 5px; /* Minimal space between the label and the text box */
+    }
+
+    .notes {
+      background: #f9f9fa;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      min-height: 540px; /* Adjusted height to align with the second 9 o'clock time entry */
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .notes textarea {
+      width: 100%;
+      font-size: 1rem;
+      background: none;
+      border: none;
+      outline: none;
+      color: #333;
+      padding: 5px;
+      resize: none;
+      height: 100%;
+      min-height: 100%; /* Ensures textarea fills the notes box */
+    }
+
+    /* Right Section - Date and Time Slots */
+    .right-section {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .date-input {
+      text-align: right;
+    }
+
+    .date-input input {
+      font-size: 0.9rem;
+      border: 1px solid #ddd;
+      padding: 4px 8px;
+      border-radius: 6px;
+      width: 100%;
+    }
+
+    .schedule {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .hour-label {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 0.9rem;
+      color: #555;
+      height: 30px;
+    }
+
+    .time-slot {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f9f9fa;
+      border-radius: 8px;
+      padding: 8px;
+      height: 30px;
+      font-size: 0.9rem;
+    }
+
+    .time-slot input {
+      width: 100%;
+      background: none;
+      border: none;
+      outline: none;
+      text-align: center;
+    }
+
+    .current {
+      border: 2px solid #007aff; /* Highlight border color */
+      background-color: #e6f0ff; /* Light highlight background */
+    }
+
+    .save-button {
+      margin-top: 20px;
+      padding: 8px 16px;
+      background-color: #007aff;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+        width: 100%;
+        padding: 15px;
+      }
+
+      .left-section, .right-section {
+        width: 100%;
+      }
+
+      .date-input {
+        text-align: left;
+      }
+
+      .schedule {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .left-section h2,
+      .priority-item input[type="text"],
+      .notes textarea,
+      .date-input input {
+        font-size: 0.85rem;
+      }
+
+      .hour-label,
+      .time-slot {
+        font-size: 0.75rem;
+        padding: 6px;
+      }
+
+      .save-button {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Left Section -->
+    <div class="left-section">
+      <h2>Priorities</h2>
+      <div class="priorities">
+        <div class="priority-item">
+          <input type="checkbox" id="priority1-checkbox" onclick="toggleDone('priority1')">
+          <input type="text" id="priority1" placeholder="Priority 1">
+        </div>
+        <div class="priority-item">
+          <input type="checkbox" id="priority2-checkbox" onclick="toggleDone('priority2')">
+          <input type="text" id="priority2" placeholder="Priority 2">
+        </div>
+        <div class="priority-item">
+          <input type="checkbox" id="priority3-checkbox" onclick="toggleDone('priority3')">
+          <input type="text" id="priority3" placeholder="Priority 3">
+        </div>
+      </div>
+      <h2 class="notes-label">Notes</h2>
+      <div class="notes">
+        <textarea id="notes" placeholder="Add your notes here..."></textarea>
+      </div>
+    </div>
+
+    <!-- Right Section -->
+    <div class="right-section">
+      <div class="date-input">
+        <label for="date">Date:</label>
+        <input type="date" id="date">
+      </div>
+      <div class="schedule" id="schedule">
+        <!-- Time slots with hour labels will be generated here -->
+      </div>
+      <button class="save-button" id="saveBtn">Save</button>
+    </div>
+  </div>
+
+  <script>
+    // Populate time slots from 5 AM to 10 PM in 30-minute intervals with hour labels
+    const scheduleContainer = document.getElementById('schedule');
+    const hours = [
+      "5", "6", "7", "8", "9", "10", "11", "12", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"
+    ];
+    const slots = [":00", ":30"];
+
+    hours.forEach(hour => {
+      // Hour label
+      const hourLabel = document.createElement('div');
+      hourLabel.className = 'hour-label';
+      hourLabel.textContent = hour;
+      scheduleContainer.appendChild(hourLabel);
+
+      // :00 slot
+      const slot00 = document.createElement('div');
+      slot00.className = 'time-slot';
+      const input00 = document.createElement('input');
+      input00.type = 'text';
+      input00.placeholder = `${hour}:00`;
+      slot00.appendChild(input00);
+      scheduleContainer.appendChild(slot00);
+
+      // :30 slot
+      const slot30 = document.createElement('div');
+      slot30.className = 'time-slot';
+      const input30 = document.createElement('input');
+      input30.type = 'text';
+      input30.placeholder = `${hour}:30`;
+      slot30.appendChild(input30);
+      scheduleContainer.appendChild(slot30);
+    });
+
+    const saveBtn = document.getElementById('saveBtn');
+    const dateInput = document.getElementById('date');
+
+    // Toggle 'done' class on priority completion
+    function toggleDone(priorityId) {
+      const checkbox = document.getElementById(`${priorityId}-checkbox`);
+      const priorityItem = document.getElementById(priorityId).parentElement;
+      priorityItem.classList.toggle('done', checkbox.checked);
+    }
+
+    // Function to save data to localStorage
+    function saveData() {
+      const date = dateInput.value;
+      if (!date) {
+        alert("Please select a date to save your entries.");
+        return;
+      }
+
+      const data = {
+        priority1: document.getElementById('priority1').value,
+        priority1Done: document.getElementById('priority1-checkbox').checked,
+        priority2: document.getElementById('priority2').value,
+        priority2Done: document.getElementById('priority2-checkbox').checked,
+        priority3: document.getElementById('priority3').value,
+        priority3Done: document.getElementById('priority3-checkbox').checked,
+        notes: document.getElementById('notes').value,
+        schedule: Array.from(scheduleContainer.querySelectorAll('.time-slot input')).map(input => input.value)
+      };
+
+      localStorage.setItem(date, JSON.stringify(data));
+      alert("Data saved successfully!");
+    }
+
+    // Function to load data from localStorage
+    function loadData() {
+      const date = dateInput.value;
+      const data = JSON.parse(localStorage.getItem(date));
+
+      if (data) {
+        document.getElementById('priority1').value = data.priority1;
+        document.getElementById('priority1-checkbox').checked = data.priority1Done || false;
+        toggleDone('priority1');
+
+        document.getElementById('priority2').value = data.priority2;
+        document.getElementById('priority2-checkbox').checked = data.priority2Done || false;
+        toggleDone('priority2');
+
+        document.getElementById('priority3').value = data.priority3;
+        document.getElementById('priority3-checkbox').checked = data.priority3Done || false;
+        toggleDone('priority3');
+
+        document.getElementById('notes').value = data.notes;
+
+        Array.from(scheduleContainer.querySelectorAll('.time-slot input')).forEach((input, index) => {
+          input.value = data.schedule[index] || '';
+        });
+      } else {
+        // Clear fields if no data for selected date
+        document.getElementById('priority1').value = '';
+        document.getElementById('priority1-checkbox').checked = false;
+        toggleDone('priority1');
+
+        document.getElementById('priority2').value = '';
+        document.getElementById('priority2-checkbox').checked = false;
+        toggleDone('priority2');
+
+        document.getElementById('priority3').value = '';
+        document.getElementById('priority3-checkbox').checked = false;
+        toggleDone('priority3');
+
+        document.getElementById('notes').value = '';
+        Array.from(scheduleContainer.querySelectorAll('.time-slot input')).forEach(input => input.value = '');
+      }
+    }
+
+    // Function to update the highlight of the current time slot
+    function highlightCurrentTimeSlot() {
+      // Get current time
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinutes = now.getMinutes();
+
+      // Determine the time slot identifier, e.g., "5:00" or "5:30"
+      const timeLabel = `${currentHour % 12 || 12}:${currentMinutes < 30 ? "00" : "30"}`;
+      const slotToHighlight = Array.from(scheduleContainer.querySelectorAll('.time-slot input'))
+        .find(input => input.placeholder === timeLabel);
+
+      // Remove 'current' class from all previous highlights
+      Array.from(scheduleContainer.querySelectorAll('.time-slot')).forEach(slot => {
+        slot.classList.remove('current');
+      });
+
+      // Add 'current' class to the matching slot if it exists
+      if (slotToHighlight) {
+        slotToHighlight.parentElement.classList.add('current');
+      }
+    }
+
+    // Initial highlight of the current time slot
+    highlightCurrentTimeSlot();
+
+    // Update the highlight every minute
+    setInterval(highlightCurrentTimeSlot, 60000);
+
+    // Event Listeners
+    saveBtn.addEventListener('click', saveData);
+    dateInput.addEventListener('change', loadData);
+
+    // Set today's date by default and load data if any
+    dateInput.value = new Date().toISOString().split('T')[0];
+    loadData();
+  </script>
+</body>
+</html>
