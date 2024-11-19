@@ -1,5 +1,4 @@
 import streamlit as st
-import datetime
 from datetime import datetime
 
 # Initialize session state for data persistence
@@ -21,7 +20,7 @@ def save_data():
         ],
         'notes': st.session_state.notes,
         'schedule': [st.session_state[f"slot_{i}_{slot}"] 
-                    for i in range(18) for slot in ['00', '30']]
+                     for i in range(18) for slot in ['00', '30']]
     }
     st.session_state[f'data_{date}'] = data
     st.success("Data saved successfully!")
@@ -60,27 +59,23 @@ st.set_page_config(page_title="Responsive Timebox Planner", layout="wide")
 # Custom CSS
 st.markdown("""
     <style>
-    .stTextInput>div>div>input {
-        border-radius: 8px;
-    }
-    .stCheckbox>div>div>label {
-        font-size: 0.9rem;
-    }
     .time-slot {
-        background-color: #f9f9fa;
+        width: 100%;
+        height: 40px;
+        border: 1px solid #ddd;
         border-radius: 8px;
-        padding: 8px;
-        margin: 2px 0;
+        padding: 5px;
+        margin: 5px 0;
+        font-size: 1rem;
     }
     .current-slot {
+        width: 100%;
+        height: 40px;
         border: 2px solid #007aff;
-        background-color: #e6f0ff;
-    }
-    .notes-area {
-        min-height: 540px;
-        background-color: #f9f9fa;
         border-radius: 8px;
-        padding: 10px;
+        padding: 5px;
+        margin: 5px 0;
+        font-size: 1rem;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -99,17 +94,17 @@ with col1:
             st.checkbox("", key=f"priority_done_{i}")
         with cols[1]:
             st.text_input("", key=f"priority_text_{i}",
-                         placeholder=f"Priority {i+1}")
+                          placeholder=f"Priority {i+1}")
     
     st.subheader("Notes")
     st.text_area("", key="notes", height=400,
-                placeholder="Add your notes here...")
+                 placeholder="Add your notes here...")
 
 # Right Column - Date and Schedule
 with col2:
     # Date picker
     st.date_input("Date:", value=datetime.now(),
-                 key="date", on_change=load_data)
+                  key="date", on_change=load_data)
     
     # Schedule
     hours = ["5", "6", "7", "8", "9", "10", "11", "12", 
@@ -120,6 +115,12 @@ with col2:
     current_hour = current_time.hour
     current_minute = current_time.minute
     
+    # Adjust 24-hour clock to match 12-hour display
+    current_hour_12 = current_hour % 12 or 12
+    
+    # Determine if the current slot is :00 or :30
+    is_30_min = current_minute >= 30
+    
     # Create schedule grid
     for i, hour in enumerate(hours):
         cols = st.columns([1, 2, 2])
@@ -129,19 +130,21 @@ with col2:
         
         # :00 slot
         with cols[1]:
-            is_current = False
-            if int(hour) == (current_hour % 12 or 12) and current_minute < 30:
-                is_current = True
-            st.text_input("", key=f"slot_{i}_00",
-                         placeholder=f"{hour}:00")
+            is_current_00 = (int(hour) == current_hour_12 and not is_30_min)
+            css_class = "current-slot" if is_current_00 else "time-slot"
+            st.markdown(
+                f'<input class="{css_class}" type="text" placeholder="{hour}:00" value="{st.session_state.get(f"slot_{i}_00", "")}" />',
+                unsafe_allow_html=True
+            )
         
         # :30 slot
         with cols[2]:
-            is_current = False
-            if int(hour) == (current_hour % 12 or 12) and current_minute >= 30:
-                is_current = True
-            st.text_input("", key=f"slot_{i}_30",
-                         placeholder=f"{hour}:30")
+            is_current_30 = (int(hour) == current_hour_12 and is_30_min)
+            css_class = "current-slot" if is_current_30 else "time-slot"
+            st.markdown(
+                f'<input class="{css_class}" type="text" placeholder="{hour}:30" value="{st.session_state.get(f"slot_{i}_30", "")}" />',
+                unsafe_allow_html=True
+            )
 
     # Save button
     if st.button("Save", type="primary"):
