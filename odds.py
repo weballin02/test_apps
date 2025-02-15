@@ -1,20 +1,20 @@
 import streamlit as st
 import requests
 
-def fetch_odds(api_key, sport, region='us', market='h2h'):
+def fetch_odds(api_key, sport_key, region='us', market='h2h'):
     """
     Fetches sports betting odds from The Odds API.
 
     Args:
         api_key (str): Your API key for The Odds API.
-        sport (str): The sport key (e.g., 'soccer_epl').
+        sport_key (str): The sport key (e.g., 'basketball_ncaab').
         region (str): The region for bookmakers ('us', 'uk', 'eu', 'au').
         market (str): The betting market ('h2h', 'spreads', 'totals').
 
     Returns:
         list: A list of events with betting odds.
     """
-    url = f'https://api.the-odds-api.com/v4/sports/{sport}/odds'
+    url = f'https://api.the-odds-api.com/v4/sports/{sport_key}/odds'
     params = {
         'apiKey': api_key,
         'regions': region,
@@ -44,7 +44,8 @@ def main():
         'NBA': 'basketball_nba',
         'MLB': 'baseball_mlb',
         'NHL': 'icehockey_nhl',
-        'EPL': 'soccer_epl'
+        'EPL': 'soccer_epl',
+        'NCAAB': 'basketball_ncaab'  # Added NCAAB
     }
     sport = st.selectbox("Choose a sport:", list(sports.keys()))
     region = st.selectbox("Choose a region:", ['us', 'uk', 'eu', 'au'])
