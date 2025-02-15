@@ -1,26 +1,25 @@
 import streamlit as st
 import requests
 
-def fetch_odds(api_key, sport_key, region='us', markets='spreads,totals', bookmaker='bovada'):
+def fetch_odds(api_key, sport_key, region='us', markets='spreads,totals'):
     """
-    Fetches sports betting odds from The Odds API with specified parameters.
+    Fetches sports betting odds from The Odds API, limited to Bovada.
 
     Args:
         api_key (str): Your API key for The Odds API.
         sport_key (str): The sport key (e.g., 'basketball_ncaab').
         region (str): The region for bookmakers ('us', 'uk', 'eu', 'au').
         markets (str): Comma-separated betting markets ('h2h', 'spreads', 'totals').
-        bookmaker (str): Specific bookmaker key to filter results (default is 'bovada').
 
     Returns:
-        list: A list of events with betting odds.
+        list: A list of events with betting odds from Bovada.
     """
     url = f'https://api.the-odds-api.com/v4/sports/{sport_key}/odds'
     params = {
         'apiKey': api_key,
         'regions': region,
         'markets': markets,
-        'bookmakers': bookmaker,  # Limiting to Bovada
+        'bookmakers': 'bovada',  # Ensures only Bovada odds are fetched
         'oddsFormat': 'american',
         'dateFormat': 'iso'
     }
@@ -32,9 +31,6 @@ def fetch_odds(api_key, sport_key, region='us', markets='spreads,totals', bookma
     return response.json()
 
 def main():
-    """
-    Main function to run the Streamlit app.
-    """
     st.title("Sports Betting Odds Viewer (Bovada Only)")
 
     api_key = st.text_input("Enter your The Odds API key:", type="password")
@@ -48,7 +44,7 @@ def main():
         'MLB': 'baseball_mlb',
         'NHL': 'icehockey_nhl',
         'EPL': 'soccer_epl',
-        'NCAAB': 'basketball_ncaab'  # Added NCAAB
+        'NCAAB': 'basketball_ncaab'  # NCAAB Added
     }
     sport = st.selectbox("Choose a sport:", list(sports.keys()))
     region = st.selectbox("Choose a region:", ['us', 'uk', 'eu', 'au'])
@@ -61,11 +57,12 @@ def main():
                     st.subheader(f"{event['home_team']} vs {event['away_team']}")
                     st.write(f"Commence Time: {event['commence_time']}")
                     for bookmaker in event['bookmakers']:
-                        st.write(f"**Bookmaker:** {bookmaker['title']}")
-                        for market in bookmaker['markets']:
-                            st.write(f"**Market:** {market['key']}")
-                            for outcome in market['outcomes']:
-                                st.write(f"{outcome['name']}: {outcome['price']}")
+                        if bookmaker['key'] == 'bovada':  # Ensures only Bovada is displayed
+                            st.write(f"**Bookmaker:** {bookmaker['title']}")
+                            for market in bookmaker['markets']:
+                                st.write(f"**Market:** {market['key']}")
+                                for outcome in market['outcomes']:
+                                    st.write(f"{outcome['name']}: {outcome['price']}")
                     st.write("---")
             else:
                 st.info("No odds data available for the selected options.")
