@@ -1,15 +1,14 @@
 import streamlit as st
 import requests
 
-def fetch_odds(api_key, sport_key, region='us', markets='spreads,totals'):
+def fetch_odds(api_key, sport_key, region='us'):
     """
-    Fetches sports betting odds from The Odds API, limited to Bovada.
+    Fetches sports betting odds from The Odds API, limited to Bovada for spreads and totals.
 
     Args:
         api_key (str): Your API key for The Odds API.
         sport_key (str): The sport key (e.g., 'basketball_ncaab').
         region (str): The region for bookmakers ('us', 'uk', 'eu', 'au').
-        markets (str): Comma-separated betting markets ('h2h', 'spreads', 'totals').
 
     Returns:
         list: A list of events with betting odds from Bovada.
@@ -18,8 +17,8 @@ def fetch_odds(api_key, sport_key, region='us', markets='spreads,totals'):
     params = {
         'apiKey': api_key,
         'regions': region,
-        'markets': markets,
-        'bookmakers': 'bovada',  # Ensures only Bovada odds are fetched
+        'markets': 'spreads,totals',  # Fetch spreads and totals simultaneously
+        'bookmakers': 'bovada',  # Limit to Bovada
         'oddsFormat': 'american',
         'dateFormat': 'iso'
     }
@@ -57,12 +56,11 @@ def main():
                     st.subheader(f"{event['home_team']} vs {event['away_team']}")
                     st.write(f"Commence Time: {event['commence_time']}")
                     for bookmaker in event['bookmakers']:
-                        if bookmaker['key'] == 'bovada':  # Ensures only Bovada is displayed
-                            st.write(f"**Bookmaker:** {bookmaker['title']}")
-                            for market in bookmaker['markets']:
-                                st.write(f"**Market:** {market['key']}")
-                                for outcome in market['outcomes']:
-                                    st.write(f"{outcome['name']}: {outcome['price']}")
+                        st.write(f"**Bookmaker:** {bookmaker['title']}")
+                        for market in bookmaker['markets']:
+                            st.write(f"**Market:** {market['key']}")
+                            for outcome in market['outcomes']:
+                                st.write(f"{outcome['name']}: {outcome['price']} {'(Point: ' + str(outcome['point']) + ')' if 'point' in outcome else ''}")
                     st.write("---")
             else:
                 st.info("No odds data available for the selected options.")
