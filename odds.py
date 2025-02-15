@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 
+
 def fetch_odds(api_key, sport_key, market, region='us'):
     """
     Fetch sports betting odds from The Odds API, limiting the response to Bovada and
@@ -20,15 +21,24 @@ def fetch_odds(api_key, sport_key, market, region='us'):
         'apiKey': api_key,
         'regions': region,         # For Bovada, the region must be 'us'
         'markets': market,         # Request the selected market(s)
-        'bookmakers': 'bovada',     # Limit to Bovada only
-        'oddsFormat': 'american',
-        'dateFormat': 'iso'
+        'bookmakers': 'bovada',    # Limit to Bovada only
+        'oddsFormat': 'american',  # Use American odds format
+        'dateFormat': 'iso'        # ISO format for dates
     }
-    response = requests.get(url, params=params)
-    if response.status_code != 200:
-        st.error(f"Error fetching data: {response.status_code} - {response.text}")
+
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()  # Raise an exception for HTTP errors
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error fetching data from The Odds API: {e}")
         return []
+
+    if response.status_code != 200:
+        st.error(f"API Error: {response.status_code} - {response.text}")
+        return []
+
     return response.json()
+
 
 def main():
     st.title("Sports Betting Odds Viewer (Bovada: Selected Market Only)")
@@ -50,10 +60,10 @@ def main():
     }
     sport = st.selectbox("Choose a sport:", list(sports.keys()))
 
-    # Although a region select box is provided, Bovada is US-only.
+    # Bovada is US-only; enforce this in a clear way
     region = st.selectbox("Choose a region (Bovada is available only in the US):", ['us', 'uk', 'eu', 'au'])
     if region != 'us':
-        st.warning("Bovada is available only in the US region. Overriding selection to 'us'.")
+        st.warning("Bovada is available only in the US region. Automatically setting region to 'us'.")
         region = 'us'
 
     # Allow user to select a market type
@@ -66,7 +76,7 @@ def main():
                 st.info("No odds data available for the selected options.")
                 return
 
-            # Process each event, filtering for Bovada data
+            # Display each event's data
             for event in events:
                 # Filter bookmakers to only include Bovada (API should return only Bovada, but we double-check)
                 bovada_data = [bm for bm in event.get('bookmakers', []) if bm.get('key') == 'bovada']
@@ -75,11 +85,11 @@ def main():
 
                 st.subheader(f"{event.get('home_team')} vs {event.get('away_team')}")
                 st.write(f"Commence Time: {event.get('commence_time')}")
-                
+
                 for bm in bovada_data:
                     st.write(f"**Bookmaker:** {bm.get('title', 'Unknown')}")
-                    
-                    # Determine which markets to display based on the selection
+
+                    # Filter markets based on user selection
                     market_keys = [m.strip() for m in selected_market.split(',')]
                     markets = [m for m in bm.get('markets', []) if m.get('key') in market_keys]
                     if not markets:
@@ -91,6 +101,7 @@ def main():
                                 point_info = f" (Point: {outcome.get('point')})" if outcome.get('point') is not None else ""
                                 st.write(f"{outcome.get('name')}: {outcome.get('price')}{point_info}")
                 st.write("---")
+
 
 if __name__ == "__main__":
     main()
