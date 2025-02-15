@@ -1,29 +1,26 @@
 import streamlit as st
 import requests
 
-def fetch_odds(api_key, sport, bookmaker, odds_format):
+def fetch_odds(api_key, sport_key, bookmaker, odds_format):
     """
-    Fetches the odds for a given sport from the Odds API for only the spreads
-    and totals markets and for a single bookmaker.
-
+    Fetches odds from The Odds API for a specified sport using only the spreads and totals markets,
+    restricted to one bookmaker and a fixed region ("us").
+    
     Parameters:
         api_key (str): Your Odds API key.
-        sport (str): The selected sport (e.g., "American Football - NFL").
-        bookmaker (str): The bookmaker key to restrict the results (e.g., "fanduel").
+        sport_key (str): The API sport key (e.g., "americanfootball_nfl").
+        bookmaker (str): The bookmaker key (e.g., "fanduel").
         odds_format (str): Desired odds format ('decimal' or 'american').
-
-    Returns:
-        dict or None: JSON response from the API if successful, otherwise None.
-    """
-    # Convert sport name to API sport key format (lowercase and underscores)
-    sport_key = sport.lower().replace(" ", "_").replace("-", "_")
-    url = f"https://api.the-odds-api.com/v4/sports/{sport_key}/odds/"
     
-    # Set parameters: restrict to one bookmaker and fixed markets ("spreads" and "totals")
+    Returns:
+        dict or None: JSON response from the API if successful; otherwise, None.
+    """
+    url = f"https://api.the-odds-api.com/v4/sports/{sport_key}/odds/"
     params = {
         "apiKey": api_key,
-        "bookmakers": bookmaker,
-        "markets": "spreads,totals",
+        "regions": "us",              # Required region parameter
+        "bookmakers": bookmaker,       # Restrict results to one bookmaker
+        "markets": "spreads,totals",   # Fixed markets
         "oddsFormat": odds_format.lower()
     }
     
@@ -34,22 +31,25 @@ def fetch_odds(api_key, sport, bookmaker, odds_format):
         st.error(f"Failed to fetch odds. Error Code: {response.status_code}")
         return None
 
+# Mapping from display names to API sport keys
+sport_mapping = {
+    "American Football - NFL": "americanfootball_nfl",
+    "American Football - NCAAF": "americanfootball_ncaaf",
+    "Basketball - NBA": "basketball_nba",
+    "Baseball - MLB": "baseball_mlb"
+}
+
 # Streamlit UI Layout
 st.title("Sports Odds Fetcher")
 
-# API key input
+# Input for API key
 api_key = st.text_input("Enter your Odds API Key", type="password")
 
-# Sport selection dropdown
-sports = [
-    "American Football - NFL",
-    "American Football - NCAAF",
-    "Basketball - NBA",
-    "Baseball - MLB"
-]
-selected_sport = st.selectbox("Select League/Competition", sports)
+# Sport selection using proper mapping
+selected_sport_display = st.selectbox("Select League/Competition", list(sport_mapping.keys()))
+selected_sport_key = sport_mapping[selected_sport_display]
 
-# Bookmaker selection dropdown (single bookmaker)
+# Single bookmaker selection dropdown
 bookmakers = [
     ("FanDuel", "fanduel"),
     ("DraftKings", "draftkings"),
@@ -58,24 +58,23 @@ bookmakers = [
     ("William Hill (US)", "williamhill_us")
 ]
 selected_bookmaker_label = st.selectbox("Select Bookmaker", [b[0] for b in bookmakers])
-# Get the bookmaker key from the selected label
-selected_bookmaker_key = dict(bookmakers)[selected_bookmaker_label]
+selected_bookmaker = dict(bookmakers)[selected_bookmaker_label]
 
-# Odds format radio button
+# Odds format selection
 odds_format = st.radio("Select Odds Format", ["Decimal", "American"])
 
 # Optional output tab name
 output_tab = st.text_input("Output Tab Name (Optional)", "Odds Data")
 
-# Display fixed cost: 2 markets x 1 bookmaker
-st.write("Max. Usage Cost: 2 (2 markets x 1 bookmaker)")
+# Display fixed usage cost info: 2 markets x 1 region = 2
+st.write("Max. Usage Cost: 2 (2 markets x 1 region)")
 
-# Fetch button and action
+# Fetch odds action
 if st.button("Fetch"):
     if not api_key:
         st.error("Please enter your API key.")
     else:
-        data = fetch_odds(api_key, selected_sport, selected_bookmaker_key, odds_format)
+        data = fetch_odds(api_key, selected_sport_key, selected_bookmaker, odds_format)
         if data:
             st.success("Odds Data Fetched Successfully!")
             st.write(data)
