@@ -1,15 +1,16 @@
 import streamlit as st
 import requests
 
-def fetch_odds(api_key, sport_key, region='us', market='h2h'):
+def fetch_odds(api_key, sport_key, region='us', markets='spreads,totals', bookmaker='bovada'):
     """
-    Fetches sports betting odds from The Odds API.
+    Fetches sports betting odds from The Odds API with specified parameters.
 
     Args:
         api_key (str): Your API key for The Odds API.
         sport_key (str): The sport key (e.g., 'basketball_ncaab').
         region (str): The region for bookmakers ('us', 'uk', 'eu', 'au').
-        market (str): The betting market ('h2h', 'spreads', 'totals').
+        markets (str): Comma-separated betting markets ('h2h', 'spreads', 'totals').
+        bookmaker (str): Specific bookmaker key to filter results (default is 'bovada').
 
     Returns:
         list: A list of events with betting odds.
@@ -18,10 +19,12 @@ def fetch_odds(api_key, sport_key, region='us', market='h2h'):
     params = {
         'apiKey': api_key,
         'regions': region,
-        'markets': market,
+        'markets': markets,
+        'bookmakers': bookmaker,  # Limiting to Bovada
         'oddsFormat': 'american',
         'dateFormat': 'iso'
     }
+
     response = requests.get(url, params=params)
     if response.status_code != 200:
         st.error(f"Error fetching data: {response.status_code} - {response.text}")
@@ -32,7 +35,7 @@ def main():
     """
     Main function to run the Streamlit app.
     """
-    st.title("Sports Betting Odds Viewer")
+    st.title("Sports Betting Odds Viewer (Bovada Only)")
 
     api_key = st.text_input("Enter your The Odds API key:", type="password")
     if not api_key:
@@ -49,11 +52,10 @@ def main():
     }
     sport = st.selectbox("Choose a sport:", list(sports.keys()))
     region = st.selectbox("Choose a region:", ['us', 'uk', 'eu', 'au'])
-    market = st.selectbox("Choose a market:", ['h2h', 'spreads', 'totals'])
 
     if st.button("Fetch Odds"):
         with st.spinner("Fetching odds..."):
-            odds_data = fetch_odds(api_key, sports[sport], region, market)
+            odds_data = fetch_odds(api_key, sports[sport], region)
             if odds_data:
                 for event in odds_data:
                     st.subheader(f"{event['home_team']} vs {event['away_team']}")
