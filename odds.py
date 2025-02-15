@@ -17,8 +17,8 @@ def fetch_odds(api_key, sport_key, region='us'):
     params = {
         'apiKey': api_key,
         'regions': region,
-        'markets': 'spreads,totals',  # Fetch spreads and totals simultaneously
-        'bookmakers': 'bovada',  # Limit to Bovada
+        'markets': 'spreads,totals',  # Fetch both spreads and totals simultaneously
+        'bookmakers': 'bovada',  # Limit to Bovada only
         'oddsFormat': 'american',
         'dateFormat': 'iso'
     }
@@ -56,11 +56,12 @@ def main():
                     st.subheader(f"{event['home_team']} vs {event['away_team']}")
                     st.write(f"Commence Time: {event['commence_time']}")
                     for bookmaker in event['bookmakers']:
-                        st.write(f"**Bookmaker:** {bookmaker['title']}")
-                        for market in bookmaker['markets']:
-                            st.write(f"**Market:** {market['key']}")
-                            for outcome in market['outcomes']:
-                                st.write(f"{outcome['name']}: {outcome['price']} {'(Point: ' + str(outcome['point']) + ')' if 'point' in outcome else ''}")
+                        if bookmaker['key'] == 'bovada':  # Display only Bovada
+                            st.write(f"**Bookmaker:** {bookmaker['title']}")
+                            for market in bookmaker['markets']:
+                                st.write(f"**Market:** {market['key']}")
+                                for outcome in market['outcomes']:
+                                    st.write(f"{outcome['name']}: {outcome['price']} {'(Point: ' + str(outcome['point']) + ')' if 'point' in outcome else ''}")
                     st.write("---")
             else:
                 st.info("No odds data available for the selected options.")
