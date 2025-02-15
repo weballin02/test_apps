@@ -1,70 +1,48 @@
-import streamlit as st
-import requests
+# Prompt user for API key
+api_key = st.text_input("Enter your The Odds API key:", type="password")
+if not api_key:
+    st.warning("Please enter your API key to continue.")
+    st.stop()
 
-def fetch_odds(api_key, sport_key, region='us'):
-    """
-    Fetches sports betting odds from The Odds API, limited to Bovada for spreads and totals.
+# Define available sports
+sports = {
+    'NFL': 'americanfootball_nfl',
+    'NBA': 'basketball_nba',
+    'MLB': 'baseball_mlb',
+    'NHL': 'icehockey_nhl',
+    'EPL': 'soccer_epl',
+    'NCAAB': 'basketball_ncaab'
+}
+sport = st.selectbox("Choose a sport:", list(sports.keys()))
 
-    Args:
-        api_key (str): Your API key for The Odds API.
-        sport_key (str): The sport key (e.g., 'basketball_ncaab').
-        region (str): The region for bookmakers ('us', 'uk', 'eu', 'au').
+# Although region selection is available, Bovada is only available in the US.
+region = st.selectbox("Choose a region (Bovada is available only in the US):", ['us', 'uk', 'eu', 'au'])
+if region != 'us':
+    st.warning("Bovada is available only in the US region. Overriding selection to 'us'.")
+    region = 'us'
 
-    Returns:
-        list: A list of events with betting odds from Bovada.
-    """
-    url = f'https://api.the-odds-api.com/v4/sports/{sport_key}/odds'
-    params = {
-        'apiKey': api_key,
-        'regions': region,
-        'markets': 'spreads,totals',  # Fetch both spreads and totals simultaneously
-        'bookmakers': 'bovada',  # Limit to Bovada only
-        'oddsFormat': 'american',
-        'dateFormat': 'iso'
-    }
-
-    response = requests.get(url, params=params)
-    if response.status_code != 200:
-        st.error(f"Error fetching data: {response.status_code} - {response.text}")
-        return []
-    return response.json()
-
-def main():
-    st.title("Sports Betting Odds Viewer (Bovada Only)")
-
-    api_key = st.text_input("Enter your The Odds API key:", type="password")
-    if not api_key:
-        st.warning("Please enter your API key to continue.")
-        st.stop()
-
-    sports = {
-        'NFL': 'americanfootball_nfl',
-        'NBA': 'basketball_nba',
-        'MLB': 'baseball_mlb',
-        'NHL': 'icehockey_nhl',
-        'EPL': 'soccer_epl',
-        'NCAAB': 'basketball_ncaab'  # NCAAB Added
-    }
-    sport = st.selectbox("Choose a sport:", list(sports.keys()))
-    region = st.selectbox("Choose a region:", ['us', 'uk', 'eu', 'au'])
-
-    if st.button("Fetch Odds"):
-        with st.spinner("Fetching odds..."):
-            odds_data = fetch_odds(api_key, sports[sport], region)
-            if odds_data:
-                for event in odds_data:
-                    st.subheader(f"{event['home_team']} vs {event['away_team']}")
-                    st.write(f"Commence Time: {event['commence_time']}")
-                    for bookmaker in event['bookmakers']:
-                        if bookmaker['key'] == 'bovada':  # Display only Bovada
-                            st.write(f"**Bookmaker:** {bookmaker['title']}")
-                            for market in bookmaker['markets']:
-                                st.write(f"**Market:** {market['key']}")
-                                for outcome in market['outcomes']:
-                                    st.write(f"{outcome['name']}: {outcome['price']} {'(Point: ' + str(outcome['point']) + ')' if 'point' in outcome else ''}")
-                    st.write("---")
-            else:
-                st.info("No odds data available for the selected options.")
-
-if __name__ == "__main__":
-    main()
+# Fetch odds when the user clicks the button
+if st.button("Fetch Odds"):
+    with st.spinner("Fetching odds..."):
+        odds_data = fetch_odds(api_key, sports[sport], region)
+        if odds_data:
+            for event in odds_data:
+                st.subheader(f"{event['home_team']} vs {event['away_team']}")
+                st.write(f"Commence Time: {event['commence_time']}")
+                
+                # Loop over bookmakers in the event; display Bovada data only
+                for bookmaker in event.get('bookmakers', []):
+                    if bookmaker.get('key') == 'bovada':
+                        st.write(f"**Bookmaker:** {bookmaker.get('title', 'Unknown')}")
+                        # Loop over markets (spread and totals)
+                        for market in bookmaker.get('markets', []):
+                            st.write(f"**Market:** {market.get('key')}")
+                            for outcome in market.get('outcomes', []):
+                                point_info = ""
+                                # Add point information if available
+                                if outcome.get('point') is not None:
+                                    point_info = f" (Point: {outcome.get('point')})"
+                                st.write(f"{outcome.get('name')}: {outcome.get('price')}{point_info}")
+                st.write("---")
+        else:
+            st.info("No odds data available for the selected options.")
